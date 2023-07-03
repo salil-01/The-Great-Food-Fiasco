@@ -200,7 +200,7 @@ load_orders()
 
 # Main menu
 while True:
-    print("\n------ Food Management App ------")
+    print("\n------ The Great Food Fiasco App ------")
     print("1. Display Menu")
     print("2. Add Item")
     print("3. Remove Item")
@@ -226,7 +226,7 @@ while True:
     elif choice == '7':
         display_orders()
     elif choice == '8':
-        print("Thank you for using the Food Management App. Goodbye!")
+        print("Thank you for using the The Great Food Fiasco App. Goodbye!")
         break
     else:
         print("Invalid choice. Please enter a valid option.")
