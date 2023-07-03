@@ -1,0 +1,1 @@
+{"orders": [{"order_id": 1, "customer_name": "salil", "items": [2, 3], "total_price": 40, "status": "Ready"}, {"order_id": 2, "customer_name": "test1", "items": [2], "total_price": 20, "status": "Received"}], "order_counter": 2}

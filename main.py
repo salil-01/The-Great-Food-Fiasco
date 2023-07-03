@@ -1,20 +1,53 @@
+import random
+import json
 from tabulate import tabulate
 
-foodItems = [
-    {"id": 1, "name": "Samosa", "price": 250, "availability": "Yes", "stock": 10},
-    {"id": 2, "name": "Chips", "price": 50, "availability": "Yes", "stock": 10},
-    {"id": 3, "name": "Lassi", "price": 100, "availability": "Yes", "stock": 10}
-]
-
+foodItems = []
 orders = []
 order_counter = 1
+
+
+def save_menu():
+    with open("menu.json", "w") as file:
+        json.dump(foodItems, file)
+
+
+def load_menu():
+    global foodItems
+    try:
+        with open("menu.json", "r") as file:
+            foodItems = json.load(file)
+    except FileNotFoundError:
+        foodItems = []
+
+
+def save_orders():
+    with open("orders.json", "w") as file:
+        mydictionary = {
+            "orders": orders,
+            "order_counter": order_counter
+        }
+        json.dump(mydictionary, file)
+
+
+def load_orders():
+    global orders, order_counter
+    try:
+        with open("orders.json", "r") as file:
+            data = json.load(file)
+            orders = data["orders"]
+            order_counter = data["order_counter"]
+    except FileNotFoundError:
+        orders = []
+        order_counter = 1
 
 
 def display_menu():
     table = []
     headers = ["ID", "Name", "Price", "Availability", "Stock"]
 
-    for item in foodItems:
+    for index, item in enumerate(foodItems):
+        item["id"] = index + 1
         table.append([item["id"], item["name"], item["price"],
                      item["availability"], item["stock"]])
 
@@ -23,7 +56,7 @@ def display_menu():
 
 def add_item():
     name = input("Enter item name: ")
-    price = float(input("Enter item price: "))
+    price = int(input("Enter item price: "))
     availability = "Yes"
     stock = int(input("Enter item stock: "))
     new_item = {
@@ -35,6 +68,7 @@ def add_item():
     }
     foodItems.append(new_item)
     print(f"Item '{name}' added to the menu.")
+    save_menu()
 
 
 def remove_item():
@@ -44,6 +78,7 @@ def remove_item():
         if item["id"] == item_id:
             foodItems.remove(item)
             print(f"Item with ID {item_id} removed from the menu.")
+            save_menu()
             break
     else:
         print(f"No item found with ID {item_id}. Please enter a valid ID.")
@@ -62,6 +97,7 @@ def update_availability():
                 item["stock"] = int(input("Enter item stock: "))
             print(
                 f"Availability for item with ID {item_id} updated to {availability}.")
+            save_menu()
             break
     else:
         print(f"No item found with ID {item_id}. Please enter a valid ID.")
@@ -77,31 +113,40 @@ def take_order():
         if item["availability"] == "Yes":
             print(
                 f'ID: {item["id"]}, Name: {item["name"]}, Price: {item["price"]}')
-    item_id = int(input("Enter item ID to order: "))
-    quantity = int(input("Enter quantity: "))
-    for item in foodItems:
-        if item["id"] == item_id:
-            if item["availability"] == "No":
-                print("Sorry, this item is currently unavailable for ordering.")
-                return
-            if item["stock"] < quantity:
-                print("Insufficient stock for this item.")
-                return
-            item["stock"] -= quantity
-            break
-    else:
-        print(f"No item found with ID {item_id}. Please enter a valid ID.")
+    order_items = input(
+        "Enter item IDs to order (separated by comma): ").split(",")
+    order_items = [int(item_id) for item_id in order_items]
+    total_price = 0
 
-    order = {
-        "order_id": order_counter,
-        "customer_name": customer_name,
-        "item_id": item_id,
-        "quantity": quantity,
-        "status": "Received"
-    }
-    orders.append(order)
-    order_counter += 1
-    print("Order placed successfully.")
+    for item_id in order_items:
+        for item in foodItems:
+            if item["id"] == item_id:
+                if item["availability"] == "No":
+                    print(
+                        f"Item with ID {item_id} is currently unavailable for ordering.")
+                    break
+                if item["stock"] <= 0:
+                    print(f"Insufficient stock for item with ID {item_id}.")
+                    break
+                item["stock"] -= 1
+                total_price += item["price"]
+                break
+        else:
+            print(f"No item found with ID {item_id}. Please enter a valid ID.")
+
+    else:
+        order = {
+            "order_id": order_counter+1,
+            "customer_name": customer_name,
+            "items": order_items,
+            "total_price": total_price,
+            "status": "Received"
+        }
+        orders.append(order)
+        order_counter += 1
+        print("Order placed successfully.")
+        print(f"Total Price: {total_price}")
+        save_orders()
 
 
 def change_status():
@@ -111,8 +156,13 @@ def change_status():
         if order["order_id"] == order_id:
             status = input(
                 "Enter the new status (Preparing/Ready/Pickup/Delivered): ")
-            order["status"] = status
-            print(f"Status for order with ID {order_id} changed to {status}.")
+            if status in ["Preparing", "Ready", "Pickup", "Delivered"]:
+                order["status"] = status
+                print(
+                    f"Status for order with ID {order_id} changed to {status}.")
+                save_orders()
+            else:
+                print("Invalid status. Please enter a valid status.")
             break
     else:
         print(f"No order found with ID {order_id}. Please enter a valid ID.")
@@ -128,6 +178,10 @@ def display_orders():
 
     print(tabulate(table, headers, tablefmt="fancy_grid"))
 
+
+# Load menu and orders data
+load_menu()
+load_orders()
 
 # Main menu
 while True:
