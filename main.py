@@ -1,4 +1,3 @@
-import random
 import json
 from tabulate import tabulate
 
@@ -105,20 +104,26 @@ def update_availability():
 
 def take_order():
     global order_counter
-    display_menu()
+    table = []
+    headers = ["ID", "Name", "Price"]
     print("------- New Order -------")
     customer_name = input("Enter customer name: ")
+
     print("Available items:")
     for item in foodItems:
-        if item["availability"] == "Yes":
-            print(
-                f'ID: {item["id"]}, Name: {item["name"]}, Price: {item["price"]}')
+        if item["availability"] == "Yes" and item["stock"] > 0:
+            table.append([item["id"], item["name"], item["price"]])
+    print(tabulate(table, headers, tablefmt="fancy_grid"))
+
     order_items = input(
         "Enter item IDs to order (separated by comma): ").split(",")
     order_items = [int(item_id) for item_id in order_items]
+
     total_price = 0
+    selected_items = []
 
     for item_id in order_items:
+        item_found = False
         for item in foodItems:
             if item["id"] == item_id:
                 if item["availability"] == "No":
@@ -130,15 +135,18 @@ def take_order():
                     break
                 item["stock"] -= 1
                 total_price += item["price"]
+                selected_items.append(item)
+                item_found = True
                 break
-        else:
+
+        if not item_found:
             print(f"No item found with ID {item_id}. Please enter a valid ID.")
 
-    else:
+    if len(selected_items) == len(order_items):
         order = {
-            "order_id": order_counter+1,
+            "order_id": order_counter + 1,
             "customer_name": customer_name,
-            "items": order_items,
+            "items": [item["id"] for item in selected_items],
             "total_price": total_price,
             "status": "Received"
         }
@@ -147,6 +155,13 @@ def take_order():
         print("Order placed successfully.")
         print(f"Total Price: {total_price}")
         save_orders()
+        save_menu()
+
+    # Update availability to "No" if stock becomes 0
+    for item in foodItems:
+        if item["stock"] == 0:
+            item["availability"] = "No"
+            # print(f"Item with ID {item['id']} is no longer available.")
 
 
 def change_status():
