@@ -1,6 +1,7 @@
 import json
 from tabulate import tabulate
 
+
 foodItems = []
 orders = []
 order_counter = 1
