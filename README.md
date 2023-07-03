@@ -62,6 +62,7 @@ The file structure of the project is as follows:
 ├── menu.json            # JSON file containing the menu items
 ├── orders.json          # JSON file containing the orders
 ├── README.md            # Documentation file (you're currently reading it)
+└── requirements.txt # List of required dependencies
 ```
 
 ## Contributing
